@@ -1,7 +1,7 @@
 # Cyclsitic Bike-Share trip data
 ![](https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQQHyMoiaEdGQq5FU3yMeECDqa_eFO4bdvUK00VAjCMt9eMHSSa)
 
-This is a Google Data Analytics capstone project that contains analysis of the **Bike-Share trip data** for the first quarter of 2022 ( January, february & March), with the aim of answering **"How members and casual riders use Cyclistic bikes differently"**.
+This is a Google Data Analytics capstone project that contains analysis of the **Bike-Share trip data** for the first quarter of 2022 ( January, February & March), with the aim of answering **"How members and casual riders use Cyclistic bikes differently"**.
 
 #### Tools used:
 1. Google spreadsheet.

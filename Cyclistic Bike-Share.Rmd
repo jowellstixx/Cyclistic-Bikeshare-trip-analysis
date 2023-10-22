@@ -1,0 +1,270 @@
+---
+title: "Cyclistic Bike-Share trip data"
+author: "Chuku Joel"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+![](https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQQHyMoiaEdGQq5FU3yMeECDqa_eFO4bdvUK00VAjCMt9eMHSSa)
+
+This document contains analysis of the Cyclistic Bike-share trip data for January, February and March 2022, with the aim of answering **How annual members and casual riders use Cyclistic bikes differently**.
+
+### First install and load packages needed for a successful analysis:
+
+-   install.packages("tidyverse")
+-   install.packages("dplyr")
+-   install.packages("skimr")
+-   install.packages("lubridate")
+-   install.packages("janitor")
+-   install.packages("ggplot2")
+-   install.packages("readr")
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(dplyr)
+library(skimr)
+library(janitor)
+library(lubridate)
+library(ggplot2)
+library(readr)
+```
+
+### 1. Import and merge data frames:
+
+Import the data frames for January, February and March, using 'read_csv' function:
+
+```{r echo=TRUE}
+Januay_data <- read_csv("/Users/joelchuku/Downloads/Capstone Bikeshare/202201-divvy-tripdata.csv")
+February_data <- read_csv("/Users/joelchuku/Downloads/Capstone Bikeshare/202202-divvy-tripdata.csv")
+March_data <- read_csv("/Users/joelchuku/Downloads/Capstone Bikeshare/202203-divvy-tripdata.csv")
+```
+
+Merge the data frames for January, February and March, using 'bind_rows' function:
+
+```{r merge data frames}
+bikeshare_tripdata <- bind_rows(Januay_data, February_data, March_data, .id = "Source")
+```
+
+### 2. Get summary of the data set:
+
+```{r echo=TRUE}
+summary(bikeshare_tripdata)
+```
+
+```{r, head}
+head(bikeshare_tripdata)
+```
+
+```{r, colnames}
+colnames(bikeshare_tripdata)
+```
+
+```{r, skim_without_charts}
+skim_without_charts(bikeshare_tripdata)
+```
+
+### 3. Finding the days of the week riders use Bike-Share:
+
+```{r}
+bikeshare_tripdata <- bikeshare_tripdata %>%
+  mutate(day_of_week = weekdays(started_at))
+```
+
+```{r}
+bikeshare_tripdata %>%
+  group_by(day_of_week) %>%
+  drop_na() %>%
+  count()
+```
+
+```{r}
+ggplot(data = bikeshare_tripdata) +
+  geom_bar(mapping = aes(x = day_of_week, fill = day_of_week)) +
+  labs(x = "Day of week", y = "Count", title = "Most popular day for riders", caption = "Monday is the most popular day for riders") 
+```
+
+-   This plot shows **Monday** as the most popular day for riders, with **Wednesday** almost measuring up.
+
+### 4. Finding the most popular day for the types of riders:
+
+```{r}
+ggplot(data = bikeshare_tripdata) +
+  geom_bar(mapping = aes(x = day_of_week, fill = day_of_week)) +
+  labs(x = "Day of week", y = "Count", title = "Most popular day for riders:", subtitle = "January to March.") +
+  facet_wrap(~member_casual) +
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+-   The plot shows a pattern in both rider type usage, where the **member** riders use Bike-Share more on weekdays and the **casual** riders use **Bike-Share** mostly on weekends.
+
+### 5. Finding the total of 'member' riders and 'casual' riders:
+
+-   Total riders:
+
+```{r}
+bikeshare_tripdata %>%
+  summarise(n_riders = n_distinct(ride_id))
+```
+
+-   There are a total of **503,421** riders for the first quarter of 2022.
+
+-   Total riders(**member/casual**):
+
+```{r}
+bikeshare_tripdata %>%
+  group_by(member_casual) %>%
+  summarise(n_riders = n_distinct(ride_id))
+```
+
+-   There are **129,818** **casual riders**, and **373,603** **member riders**.
+
+**Plot** to show analysis:
+
+```{r}
+ggplot(data = bikeshare_tripdata) +
+  geom_bar(mapping = aes(x = member_casual, fill = member_casual)) +
+  labs(x = "Rider types", y = "Ride count", title = "Total Rider types:", subtitle = "January to March.")
+```
+
+This plot shows that there are more ***'member'*** riders than ***'casual'*** riders.
+
+### 6. Finding the growth rate of riders in the first quarter of 2022:
+
+-   First extract **month** from the **'started_at'** column:
+
+```{r}
+bikeshare_tripdata <- bikeshare_tripdata %>%
+  mutate(ride_months = month(started_at))
+```
+
+-   Now, get the number of **member** and **casual** riders for each month:
+
+```{r, number of rides per "type of riders" for January}
+bikeshare_tripdata %>%
+  group_by(member_casual) %>%
+  filter(ride_months == 1) %>%
+  drop_na() %>%
+  count()
+```
+
+```{r, number of rides per "type of riders" for February}
+bikeshare_tripdata %>%
+  group_by(member_casual) %>%
+  filter(ride_months == 2) %>%
+  drop_na() %>%
+  count()
+```
+
+```{r, number of rides per "type of riders" for March}
+bikeshare_tripdata %>%
+  group_by(member_casual) %>%
+  filter(ride_months == 3) %>%
+  drop_na() %>%
+  count()
+```
+
+**Plot** to show analysis:
+
+```{r}
+ggplot(data = bikeshare_tripdata) +
+  geom_bar(mapping = aes(x = member_casual, fill = member_casual)) +
+  facet_wrap(~ride_months, labeller = labeller(ride_months = c("1" = "January", "2" = "February", "3" = "March"))) +
+  labs(title = "Riders growth rate", subtitle = "Showing the growth rate of riders from January to March", x = "Rider types", y = "Ride count")
+```
+
+-   This analysis shows just little growth in the **member** and **casual** riders between **January and February**, and a notable growth in the month of **March**.
+
+### 7. Finding the ride length of rides:
+
+-   First created a new column 'ride_length' by subtracting **'started_at'** column from **'ended_at'** column to get the ride length.
+
+```{r}
+bikeshare_tripdata <- mutate(bikeshare_tripdata, ride_length = ended_at - started_at)
+```
+
+-   The results were in seconds. Next step is to convert seconds to minutes:
+
+```{r}
+bikeshare_tripdata <- bikeshare_tripdata %>%
+  mutate(ride_length_min = as.numeric(ride_length) / 60)
+```
+
+-   Noticing that the minute values that are difficult to read, the next step is to convert the **'ride_length_min'** from **minutes** to **hours**.
+
+```{r}
+bikeshare_tripdata <- bikeshare_tripdata %>%
+  mutate(ride_length_hour = as.numeric(ride_length_min)/ 60)
+```
+
+-   Arrange the 'ride_length_hour' in descending order to see the **longest ride duration**:
+
+```{r}
+bikeshare_tripdata %>%
+  arrange(-ride_length_hour)
+```
+
+-   Arranging the 'ride_length_hour' in descending order, it is seen in the first rows that the **casual** riders spend more time riding that **member** riders.
+
+**Lets test the hypothesis**:
+
+-   Get the sum of ride length in hours my having a sum of the **ride_length_hour** column and grouping by **casual** and **member** riders:
+
+```{r}
+bikeshare_tripdata %>%
+  group_by(member_casual) %>%
+  drop_na() %>%
+  summarise(sum_ride_length_hour = sum(ride_length_hour))
+```
+
+-   **Plot** to show analysis:
+
+```{r}
+ggplot(data = bikeshare_tripdata) +
+  geom_col(mapping = aes(y = ride_length_hour, x = member_casual, fill = member_casual)) +
+  labs(x = "Rider types", y = "Ride duration", title = "Quarterly Ride duration:", subtitle = "January to March.")
+```
+
+-   The result shows the **member** riders have more **ride duration** than the **casual** riders.
+-   Test the hypothesis further by getting **ride duration** for each month:
+
+```{r}
+ggplot(data = bikeshare_tripdata) +
+  geom_col(mapping = aes(y = ride_length_hour, x = member_casual, fill = member_casual)) +
+  facet_wrap(~ride_months, labeller = labeller(ride_months = c("1" = "January", "2" = "February", "3" = "March"))) +
+  labs(x = "Rider types", y = "Ride duration", title = "Monthly Ride duration:", subtitle = "January, February & March.")
+```
+
+-   This plot shows that my hypothesis is partly correct. The **casual** riders had the longest ride duration for **March**.
+
+### 8. Finding the **Bike types** used by both **member** and **casual** riders:
+
+-   This analysis was conducted using a simple **bar plot**:
+
+```{r}
+ggplot(data = bikeshare_tripdata) +
+  geom_bar(mapping = aes(x = rideable_type, fill = rideable_type)) +
+  facet_wrap(~member_casual) +
+  labs(x = "Bike Type", y = "Count", title = "Types of Bikes used by riders:", subtitle = "January, February & March.")
+```
+
+-   This plot shows the **bike type** distribution among **member** and **casual** riders, showing that **member** riders use **classic bikes** than **electric bikes** with no single usage of **docked bikes**, and **casual** riders use all the **bike types** with the data showing **electric bikes** are mostly used.
+
+### Conclusion:
+
+1.  There are **503,421** total riders from **January to March**, with **129,818** as **casual riders** and **373,603** as **member riders**.
+2.  **Member riders** use Bike-Share mostly on **weekdays** and **Casual riders** use Bike-Share more on **weekends**.
+3.  There was a significant increase in the **riders** growth in the month of **March**.
+4.  For the month of **March**, **casual** riders had more **ride length** than **member** riders.
+5.  **Member** riders only use **classic** and **electric** bikes and **casual** riders use all three bike types with **docked** bikes being the least used.
+
+### Recommendation:
+
+1.  There should be more provision of **classic** and **electric** bikes, following their usage by **member** riders. It is possible that the **casual** use **docked** bikes because they had no other options.
+2.  Continue media promotion. Following the growth spike in **March**, it is likely that those results were achieved because of the social media promotion.
+3.  Further analysis of **member** and **casual** rider behavour for the next quarter of 2022.
+
+**Thank you!**

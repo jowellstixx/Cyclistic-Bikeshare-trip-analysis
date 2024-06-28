@@ -1,0 +1,259 @@
+/* Loading data set */
+SELECT
+	*
+FROM
+	world_covdi19_data
+
+/* Viewing the countries in the WHO African region */
+SELECT
+	DISTINCT(country)
+FROM
+	world_covdi19_data
+WHERE
+	WHO_region = "AFRO"
+
+/* Viewing the countries in the WHO middle east region */
+SELECT
+	DISTINCT(country)
+FROM
+	world_covdi19_data
+WHERE
+	WHO_region = "EMRO"
+
+-- Noticing that some African countries are in the middle east region in the WHO data set.
+-- Next step is to transform the data to add the missing countries to African.
+
+UPDATE
+	world_covdi19_data
+SET
+	WHO_region = 'AFRO'
+WHERE
+	Country = 'Egypt';
+
+UPDATE
+	world_covdi19_data
+SET
+	WHO_region = 'AFRO'
+WHERE
+	Country = 'Libya';
+
+UPDATE
+	world_covdi19_data
+SET
+	WHO_region = 'AFRO'
+WHERE
+	Country = 'Morocco';
+
+UPDATE
+	world_covdi19_data
+SET
+	WHO_region = 'AFRO'
+WHERE
+	Country = 'Sudan';
+
+UPDATE
+	world_covdi19_data
+SET
+	WHO_region = 'AFRO'
+WHERE
+	Country = 'Tunisia';
+
+UPDATE
+	world_covdi19_data
+SET
+	WHO_region = 'AFRO'
+WHERE
+	Country = 'Somalia';
+
+/* Loading the transformed data set */
+SELECT
+	*
+FROM
+	world_covdi19_data
+WHERE
+	WHO_region = "AFRO"
+
+/* Confirming the African country list. */
+SELECT
+	DISTINCT(country)
+FROM
+	world_covdi19_data
+WHERE
+	WHO_region = "AFRO"
+
+-- Saved the newly updated African countries as a new table
+-- Import and view the new table
+
+SELECT
+	*
+FROM
+	africa_covid19_data;
+
+SELECT
+	DISTINCT(country),
+	regions
+FROM
+	africa_covid19_data;
+
+/* Grouping the African countries to regions(west africa, central africa, southern africaa, north africa and east africa) */
+-- First created a new column 'regions'
+ALTER TABLE africa_covid19_data
+ADD regions VARCHAR
+
+-- For west africa
+UPDATE
+	africa_covid19_data
+SET
+	regions = 'west_africa'
+WHERE
+	country = 'Nigeria' 
+	OR country = 'Ghana'
+	OR country = 'Benin'
+	OR country = 'Burkina Faso'
+	OR country = 'Cabo Verde'
+	OR country = 'Gambia'
+	OR country = 'Guinea'
+	OR country = 'Guinea-Bissau'
+	OR country = "Côte d’Ivoire"
+	OR country = 'Liberia'
+	OR country = 'Mali'
+	OR country = 'Mauritania'
+	OR country = 'Niger'
+	OR country = 'Senegal'
+	OR country = 'Sierra Leone'
+	OR country = 'Togo'
+	OR country = 'Saint Helena, Ascension and Tristan da Cunha'
+
+-- For east africa
+UPDATE
+	africa_covid19_data
+SET
+	regions = 'east_africa'
+WHERE
+	country = 'Burundi' 
+	OR country = 'Comoros'
+	OR country = 'Eritrea'
+	OR country = 'Ethiopia'
+	OR country = 'Kenya'
+	OR country = 'Madagascar'
+	OR country = 'Malawi'
+	OR country = 'Mozambique'
+	OR country = "Rwanda"
+	OR country = 'Seychelles'
+	OR country = 'Somalia'
+	OR country = 'South Sudan'
+	OR country = 'Sudan'
+	OR country = 'United Republic of Tanzania'
+	OR country = 'Uganda'
+	OR country = 'Zambia'
+	OR country = 'Zimbabwe'
+
+-- For southern africa
+UPDATE
+	africa_covid19_data
+SET
+	regions = 'southern_africa'
+WHERE
+	country = 'South Africa' 
+	OR country = 'Comoros'
+	OR country = 'Eswatini'
+	OR country = 'Lesotho'
+	OR country = 'Mauritius'
+	OR country = 'Madagascar'
+	OR country = 'Malawi'
+	OR country = 'Mozambique'
+	OR country = "Namibia"
+	OR country = 'Zimbabwe'
+	OR country = 'Zambia'
+	OR country = 'Botswana'
+
+-- For central africa
+UPDATE
+	africa_covid19_data
+SET
+	regions = 'central_africa'
+WHERE
+	country = 'Angola' 
+	OR country = 'Burundi'
+	OR country = 'Cameroon'
+	OR country = 'Central African Republic'
+	OR country = 'Chad'
+	OR country = 'Congo'
+	OR country = 'Democratic Republic of the Congo'
+	OR country = 'Equatorial Guinea'
+	OR country = "Rwanda"
+	OR country = 'Gabon'
+	OR country = 'Sao Tome and Principe'
+
+-- For north africa
+UPDATE
+	africa_covid19_data
+SET
+	regions = 'north_africa'
+WHERE
+	country = 'Algeria'
+	OR country = 'Egypt'
+	OR country = 'Libya'
+	OR country = 'Morocco'
+	OR country = 'Tunisia'
+	OR country = 'Sudan'
+
+-- For the other countries with undefined regions
+UPDATE
+	africa_covid19_data
+SET
+	regions = 'other'
+WHERE
+	regions IS NULL
+
+/* Checking to see if the "Confirmed cases and deaths" are represented in the correct forms */
+SELECT
+	*
+FROM
+	africa_covid19_data
+ORDER BY
+	New_cases ASC; -- The result shows that some rows of 'New_cases' are neegative numbers and humans cannot be represented by negative numbers.
+
+SELECT
+	*
+FROM
+	africa_covid19_data
+ORDER BY
+	New_deaths ASC; -- The result shows that some rows of 'New_deaths' are neegative numbers and humans cannot be represented by negative numbers.
+
+/* Next step is to change the negative numbers to zero (0). */
+UPDATE
+	africa_covid19_data
+SET
+	New_cases = 0
+WHERE
+	New_cases < 1;
+
+UPDATE
+	africa_covid19_data
+SET
+	New_deaths = 0
+WHERE
+	New_deaths < 1;
+
+/* Delete unwanted columns */
+ALTER TABLE
+	africa_covid19_data
+DROP COLUMN
+	WHO_region;
+
+ALTER TABLE
+	africa_covid19_data
+DROP COLUMN
+	Cumulative_cases;
+
+ALTER TABLE
+	africa_covid19_data
+DROP COLUMN
+	Cumulative_deaths;
+
+-- View table
+SELECT
+	*
+FROM
+	africa_covid19_data;	
